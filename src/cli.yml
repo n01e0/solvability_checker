@@ -1,0 +1,26 @@
+name: "solvability_checker"
+version: "0.1.0"
+author: "n01e0 <reoshiseki@gmail.com>"
+about: "CTF solvability checker"
+
+args:
+  - webhook:
+      short: u
+      long: url
+      help: "webhook url"
+      takes_value: true
+      required: true
+  - solver:
+      help: "solver files dir"
+      short: s
+      long: solver
+      takes_value: true
+      required: true
+  - daemonize:
+      help: "daemonize"
+      short: d
+      long: daemonize
+  - interval:
+      help: "interval(milsec)"
+      short: i
+      long: interval
