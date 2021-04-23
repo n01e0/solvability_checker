@@ -1,5 +1,5 @@
 name: "solvability_checker"
-version: "0.1.0"
+version: "1.0.0"
 author: "n01e0 <reoshiseki@gmail.com>"
 about: "CTF solvability checker"
 
@@ -16,11 +16,8 @@ args:
       long: solver
       takes_value: true
       required: true
-  - daemonize:
-      help: "daemonize"
-      short: d
-      long: daemonize
   - interval:
       help: "interval(milsec)"
       short: i
       long: interval
+      takes_value: true

@@ -13,7 +13,7 @@ fn main() {
 
     loop {
         solvers.clone().into_par_iter().for_each(|s| {
-            if !Command::new(s.path()).status().unwrap_or_else(|e|{ eprintln!("{}: {}", s.path().display(), e); panic!();}).success() {
+            if !Command::new(s.path()).env("PWNLIB_NOTERM", "true").status().unwrap_or_else(|e|{ eprintln!("{}: {}", s.path().display(), e); panic!();}).success() {
                 ureq::post(matches.value_of("webhook").unwrap())
                     .set("Content-Type", "application/json")
                     .send_json(ureq::json!({
