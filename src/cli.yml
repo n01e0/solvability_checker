@@ -15,7 +15,6 @@ args:
       short: s
       long: solver
       takes_value: true
-      required: true
   - interval:
       help: "interval(milsec)"
       short: i

@@ -4,15 +4,22 @@ use clap::App;
 use rayon::prelude::*;
 use std::process::Command;
 use walkdir::WalkDir;
+use log::*;
+use std::env;
 
 fn main() {
+    env_logger::init();
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
-    let solvers = WalkDir::new(matches.value_of("solver").unwrap())
+    let solvers = WalkDir::new(matches.value_of("solver").unwrap_or("solver"))
         .into_iter()
         .filter_map(|f| f.ok())
         .filter(|f| f.file_type().is_file())
         .collect::<Vec<_>>();
+    println!("Collected solvers.");
+    for solver in solvers.clone() {
+        println!("{}", solver.path().display());
+    }
     let interval = std::time::Duration::from_millis(
         matches
             .value_of("interval")
@@ -32,6 +39,7 @@ fn main() {
                 })
                 .success()
             {
+                warn!("{} Failure", s.path().display());
                 ureq::post(matches.value_of("webhook").unwrap())
                     .set("Content-Type", "application/json")
                     .send_json(ureq::json!({
@@ -42,6 +50,8 @@ fn main() {
                             )
                     }))
                     .unwrap();
+            } else {
+                info!("{} Success", s.path().display());
             }
         });
         std::thread::sleep(interval);
