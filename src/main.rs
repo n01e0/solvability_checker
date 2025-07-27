@@ -1,17 +1,40 @@
-#[macro_use]
-extern crate clap;
-use clap::App;
+use clap::Parser;
+use std::time::Duration;
 use rayon::prelude::*;
 use std::process::Command;
 use walkdir::WalkDir;
 use log::*;
-use std::env;
+// CLI arguments
+#[derive(Parser, Debug)]
+#[command(
+    name = "solvability_checker",
+    version,
+    author,
+    about = "CTF solvability checker"
+)]
+struct Args {
+    /// webhook url
+    #[arg(short = 'u', long = "url")]
+    webhook: String,
+
+    /// solver files directory
+    #[arg(short = 's', long, default_value = "solver")]
+    solver: String,
+
+    /// interval between runs (milliseconds)
+    #[arg(short = 'i', long, default_value_t = 3000)]
+    interval: u64,
+
+    /// number of retries on failure
+    #[arg(short = 'r', long, default_value_t = 5)]
+    retries: u32,
+}
 
 fn main() {
+    // parse CLI args
+    let args = Args::parse();
     env_logger::init();
-    let yaml = load_yaml!("cli.yml");
-    let matches = App::from_yaml(yaml).get_matches();
-    let solvers = WalkDir::new(matches.value_of("solver").unwrap_or("solver"))
+    let solvers = WalkDir::new(&args.solver)
         .into_iter()
         .filter_map(|f| f.ok())
         .filter(|f| f.file_type().is_file())
@@ -20,38 +43,44 @@ fn main() {
     for solver in solvers.clone() {
         println!("{}", solver.path().display());
     }
-    let interval = std::time::Duration::from_millis(
-        matches
-            .value_of("interval")
-            .unwrap_or("3000")
-            .parse()
-            .unwrap_or(3000),
-    );
+    let interval = Duration::from_millis(args.interval);
 
+    let retries = args.retries;
     loop {
         solvers.clone().into_par_iter().for_each(|s| {
-            if !Command::new(s.path())
-                .env("PWNLIB_NOTERM", "true")
-                .status()
-                .unwrap_or_else(|e| {
-                    eprintln!("{}: {}", s.path().display(), e);
-                    panic!();
-                })
-                .success()
-            {
-                warn!("{} Failure", s.path().display());
-                ureq::post(matches.value_of("webhook").unwrap())
+            let mut succeeded = false;
+            for attempt in 1..=retries {
+                let status = Command::new(s.path())
+                    .env("PWNLIB_NOTERM", "true")
+                    .status()
+                    .unwrap_or_else(|e| {
+                        eprintln!("{}: {}", s.path().display(), e);
+                        panic!();
+                    });
+                if status.success() {
+                    info!("{} Success (attempt {}/{})",
+                        s.path().display(), attempt, retries);
+                    succeeded = true;
+                    break;
+                } else {
+                    warn!("{} failed (attempt {}/{})",
+                        s.path().display(), attempt, retries);
+                }
+            }
+            if !succeeded {
+                warn!("{} Failure after {} attempts", s.path().display(), retries);
+                // send webhook notification
+                let webhook_url = &args.webhook;
+                ureq::post(webhook_url)
                     .set("Content-Type", "application/json")
                     .send_json(ureq::json!({
-                        "content":
-                            format!(
-                                "{} failure!",
-                                s.path().file_name().unwrap().to_str().unwrap()
-                            )
+                        "content": format!(
+                            "{} failure after {} retries!",
+                            s.path().file_name().unwrap().to_str().unwrap(),
+                            retries
+                        )
                     }))
                     .unwrap();
-            } else {
-                info!("{} Success", s.path().display());
             }
         });
         std::thread::sleep(interval);

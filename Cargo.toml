@@ -7,9 +7,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version="2.33.3", features=["yaml"]}
+clap = { version = "4.5", features = ["derive"] }
 env_logger = "0.11.8"
 log = "0.4.27"
-rayon = "1.5.0"
-ureq = { version="2.1.0", features=["json"] }
-walkdir = "2.3.2"
+rayon = "1.10.0"
+ureq = { version="2.12.1", features=["json"] }
+walkdir = "2.5.0"
