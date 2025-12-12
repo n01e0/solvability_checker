@@ -15,7 +15,7 @@ cargo install solvability_checker
 solvability_checker \
   --url https://example.com/webhook \   # required
   --solver solver \                     # default: solver
-  --interval 3000 \                     # ms, default: 3000
+  --interval 300000 \                     # ms, default: 300000
   --retries 5                           # default: 5
 ```
 
