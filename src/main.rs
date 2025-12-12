@@ -3,7 +3,9 @@ use std::time::Duration;
 use rayon::prelude::*;
 use std::process::Command;
 use walkdir::WalkDir;
+use serde_json::json;
 use log::*;
+
 // CLI arguments
 #[derive(Parser, Debug)]
 #[command(
@@ -72,8 +74,8 @@ fn main() {
                 // send webhook notification
                 let webhook_url = &args.webhook;
                 ureq::post(webhook_url)
-                    .set("Content-Type", "application/json")
-                    .send_json(ureq::json!({
+                    .header("Content-Type", "application/json")
+                    .send_json(json!({
                         "content": format!(
                             "{} failure after {} retries!",
                             s.path().file_name().unwrap().to_str().unwrap(),
