@@ -24,7 +24,7 @@ struct Args {
     solver: String,
 
     /// interval between runs (milliseconds)
-    #[arg(short = 'i', long, default_value_t = 3000)]
+    #[arg(short = 'i', long, default_value_t = 300_000)]
     interval: u64,
 
     /// number of retries on failure

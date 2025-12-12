@@ -22,7 +22,7 @@ solvability_checker \
 ### オプション / Options
 - `--url`, `-u`: Webhook URL (必須 / required)
 - `--solver`, `-s`: ソルバーディレクトリ (default: `solver`)
-- `--interval`, `-i`: 周回間隔ミリ秒 (default: `3000`)
+- `--interval`, `-i`: 周回間隔ミリ秒 (default: `300,000`)
 - `--retries`, `-r`: 失敗時リトライ回数 (default: `5`)
 
 ### ログ / Logs

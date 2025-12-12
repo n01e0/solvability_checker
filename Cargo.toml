@@ -1,6 +1,6 @@
 [package]
 name = "solvability_checker"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["n01e0 <reoshiseki@gmail.com>"]
 edition = "2021"
 description = "Solvability checker for CTF"
