@@ -1,7 +1,7 @@
 use clap::Parser;
 use std::time::Duration;
 use rayon::prelude::*;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use walkdir::WalkDir;
 use serde_json::json;
 use log::*;
@@ -41,25 +41,25 @@ fn main() {
         .filter_map(|f| f.ok())
         .filter(|f| f.file_type().is_file())
         .collect::<Vec<_>>();
-    println!("Collected solvers.");
+    info!("Collected solvers.");
     for solver in solvers.clone() {
-        println!("{}", solver.path().display());
+        info!("{}", solver.path().display());
     }
     let interval = Duration::from_millis(args.interval);
 
     let retries = args.retries;
     loop {
         solvers.clone().into_par_iter().for_each(|s| {
+            info!("Trying {}", s.path().display());
             let mut succeeded = false;
             for attempt in 1..=retries {
                 let status = Command::new(s.path())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
                     .env("PWNLIB_NOTERM", "true")
-                    .status()
-                    .unwrap_or_else(|e| {
-                        eprintln!("{}: {}", s.path().display(), e);
-                        panic!();
-                    });
-                if status.success() {
+                    .status();
+
+                if status.is_ok_and(|stat| stat.success()) {
                     info!("{} Success (attempt {}/{})",
                         s.path().display(), attempt, retries);
                     succeeded = true;
